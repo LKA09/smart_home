@@ -81,6 +81,13 @@ const DEVICE_MAPPINGS_KEY = "smart-home.device-mappings";
 const LG_AIR_CONDITIONER_TYPE = "DEVICE_AIR_CONDITIONER";
 const tabs = ["Dashboard", "Devices", "LG ThinQ", "Settings", "Logs"] as const;
 type Tab = (typeof tabs)[number];
+const tabLabels: Record<Tab, string> = {
+  Dashboard: "홈",
+  Devices: "기기",
+  "LG ThinQ": "LG ThinQ",
+  Settings: "설정",
+  Logs: "기록",
+};
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
@@ -447,20 +454,20 @@ export default function Page() {
 
   return (
     <main className="min-h-screen pb-10">
-      <header className="sticky top-0 z-20 border-b border-white/70 bg-white/65 backdrop-blur-2xl">
+      <header className="sticky top-0 z-20 border-b border-stone-200/80 bg-[#f4f4f2]/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-stone-950 text-white shadow-sm">
               <Home size={21} strokeWidth={2.2} />
             </div>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight text-stone-950">Smart Home</h1>
+              <h1 className="text-xl font-semibold tracking-tight text-stone-950">우리 집</h1>
               <p className="text-xs font-medium text-stone-500">Smart eLife · LG ThinQ</p>
             </div>
           </div>
           <button
             aria-label="Refresh"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/80 text-blue-600 shadow-sm hover:bg-white"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-900 shadow-sm hover:bg-stone-50"
             onClick={() => refresh().catch((error) => setMessage(String(error)))}
           >
             <RefreshCw size={18} />
@@ -475,19 +482,19 @@ export default function Page() {
               key={tab}
               className={`min-w-max rounded-xl px-3.5 py-2.5 text-sm font-medium lg:w-full lg:text-left ${
                 activeTab === tab
-                  ? "bg-white text-stone-950 shadow-sm ring-1 ring-black/5"
-                  : "text-stone-500 hover:bg-white/55 hover:text-stone-900"
+                  ? "bg-stone-950 text-white shadow-sm"
+                  : "text-stone-500 hover:bg-stone-100 hover:text-stone-900"
               }`}
               onClick={() => setActiveTab(tab)}
             >
-              {tab}
+              {tabLabels[tab]}
             </button>
           ))}
         </nav>
 
         <section className="min-w-0 space-y-5">
           {message ? (
-            <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm font-medium text-amber-900 shadow-sm backdrop-blur-xl">{message}</div>
+            <div className="rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm font-medium text-stone-800 shadow-sm">{message}</div>
           ) : null}
 
           {!signedIn && activeTab !== "LG ThinQ" ? (
@@ -495,12 +502,12 @@ export default function Page() {
               <form className="glass-panel rounded-3xl p-5 sm:p-6" onSubmit={handleLogin}>
                 <div className="mb-4 flex items-center gap-2">
                   <LogIn size={18} />
-                  <h2 className="font-semibold">Login</h2>
+                  <h2 className="font-semibold">Smart eLife 로그인</h2>
                 </div>
                 <label className="mb-3 block text-sm">
-                  <span className="mb-1 block text-stone-600">Smart eLife email</span>
+                  <span className="mb-1 block text-stone-600">이메일</span>
                   <input
-                    className="w-full rounded-xl border border-stone-200 bg-white/80 px-3.5 py-2.5 shadow-inner outline-none focus:border-blue-400"
+                    className="w-full rounded-xl border border-stone-300 bg-white px-3.5 py-2.5 outline-none focus:border-stone-950"
                     value={username}
                     onChange={(event) => setUsername(event.target.value)}
                     type="email"
@@ -508,18 +515,18 @@ export default function Page() {
                   />
                 </label>
                 <label className="mb-4 block text-sm">
-                  <span className="mb-1 block text-stone-600">Password</span>
+                  <span className="mb-1 block text-stone-600">비밀번호</span>
                   <input
-                    className="w-full rounded-xl border border-stone-200 bg-white/80 px-3.5 py-2.5 shadow-inner outline-none focus:border-blue-400"
+                    className="w-full rounded-xl border border-stone-300 bg-white px-3.5 py-2.5 outline-none focus:border-stone-950"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     type="password"
                     autoComplete="current-password"
                   />
                 </label>
-                <button className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 font-medium text-white shadow-lg shadow-blue-500/20 hover:bg-blue-500 disabled:opacity-60" disabled={busy}>
+                <button className="inline-flex items-center gap-2 rounded-full bg-stone-950 px-5 py-2.5 font-medium text-white hover:bg-stone-800 disabled:opacity-60" disabled={busy}>
                   <Lock size={16} />
-                  Sign in
+                  로그인
                 </button>
               </form>
 
@@ -527,12 +534,12 @@ export default function Page() {
                 <form className="glass-panel rounded-3xl p-5 sm:p-6" onSubmit={handlePasscode}>
                   <div className="mb-4 flex items-center gap-2">
                     <PanelRight size={18} />
-                    <h2 className="font-semibold">Wallpad</h2>
+                    <h2 className="font-semibold">월패드 인증</h2>
                   </div>
                   <label className="mb-4 block text-sm">
-                    <span className="mb-1 block text-stone-600">Passcode</span>
+                    <span className="mb-1 block text-stone-600">인증번호</span>
                     <input
-                    className="w-full rounded-xl border border-stone-200 bg-white/80 px-3.5 py-2.5 shadow-inner outline-none focus:border-blue-400"
+                    className="w-full rounded-xl border border-stone-300 bg-white px-3.5 py-2.5 outline-none focus:border-stone-950"
                       value={passcode}
                       onChange={(event) => setPasscode(event.target.value)}
                       inputMode="numeric"
@@ -540,7 +547,7 @@ export default function Page() {
                   </label>
                   <button className="inline-flex items-center gap-2 rounded-full bg-stone-900 px-5 py-2.5 font-medium text-white shadow-lg shadow-stone-900/10 hover:bg-stone-800 disabled:opacity-60" disabled={busy}>
                     <CheckCircle2 size={16} />
-                    Authorize
+                    인증하기
                   </button>
                 </form>
               ) : null}
@@ -548,30 +555,44 @@ export default function Page() {
           ) : null}
 
           {signedIn && activeTab === "Dashboard" ? (
-            <div className="space-y-4">
+            <div className="space-y-5">
+              <div className="px-1 pb-1">
+                <p className="text-sm font-medium text-stone-500">오늘도 편안하게</p>
+                <h2 className="mt-1 text-3xl font-semibold tracking-tight text-stone-950">
+                  우리 집 상태
+                </h2>
+              </div>
               <div className="grid gap-3 sm:grid-cols-3">
-                <Metric icon={<Activity size={18} />} label="Session" value={health?.session.signedIn ? "Online" : "Offline"} />
-                <Metric icon={<List size={18} />} label="Devices" value={String(health?.session.devices ?? devices.length)} />
-                <Metric icon={<Lightbulb size={18} />} label="Lights" value={String(health?.session.lights ?? lights.length)} />
+                <Metric icon={<Activity size={18} />} label="연결 상태" value={health?.session.signedIn ? "정상" : "연결 끊김"} />
+                <Metric icon={<List size={18} />} label="전체 기기" value={String(health?.session.devices ?? devices.length)} />
+                <Metric icon={<Lightbulb size={18} />} label="조명" value={String(health?.session.lights ?? lights.length)} />
               </div>
 
               <div className="glass-panel rounded-3xl p-5 sm:p-6">
                 <div className="mb-4 flex items-center justify-between">
-                  <h2 className="font-semibold">Elevator</h2>
-                  <span className="text-sm text-stone-500">Exterior call</span>
+                  <div>
+                    <h2 className="font-semibold">엘리베이터</h2>
+                    <p className="mt-1 text-sm text-stone-500">집 앞으로 엘리베이터를 호출합니다</p>
+                  </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-stone-100">
+                    <ArrowUp size={18} />
+                  </div>
                 </div>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 font-medium text-white shadow-lg shadow-blue-500/20 hover:bg-blue-500 disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-full bg-stone-950 px-5 py-2.5 font-medium text-white hover:bg-stone-800 disabled:opacity-60"
                   onClick={handleElevator}
                   disabled={busy}
                 >
                   <ArrowUp size={16} />
-                  Call elevator
+                  엘리베이터 부르기
                 </button>
               </div>
 
               <div className="glass-panel rounded-3xl p-5 sm:p-6">
-                <h2 className="mb-4 font-semibold">Lights</h2>
+                <div className="mb-4">
+                  <h2 className="font-semibold">조명</h2>
+                  <p className="mt-1 text-sm text-stone-500">방별 조명을 바로 켜고 끌 수 있어요</p>
+                </div>
                 <div className="grid gap-2 md:grid-cols-2">
                   {lights.length ? (
                     lights.map((device) => (
@@ -584,7 +605,7 @@ export default function Page() {
                       />
                     ))
                   ) : (
-                    <p className="text-sm text-stone-500">No light devices have been discovered yet.</p>
+                    <p className="text-sm text-stone-500">아직 발견된 조명이 없습니다.</p>
                   )}
                 </div>
               </div>
@@ -602,7 +623,7 @@ export default function Page() {
                         <div className="min-w-0">
                           <input
                             aria-label={`Display name for ${device.name}`}
-                            className="w-full rounded-xl border border-stone-200 bg-white/75 px-3.5 py-2.5 font-medium shadow-inner outline-none focus:border-blue-400"
+                            className="w-full rounded-xl border border-stone-300 bg-white px-3.5 py-2.5 font-medium outline-none focus:border-stone-950"
                             value={deviceMappings[device.deviceId]?.name ?? ""}
                             placeholder={device.displayName}
                             onChange={(event) => updateDeviceMapping(device.deviceId, { name: event.target.value })}
@@ -613,7 +634,7 @@ export default function Page() {
                           className={`rounded-full px-4 py-2 text-sm font-medium ${
                             device.disabled
                               ? "bg-stone-200/80 text-stone-600"
-                              : "bg-blue-600 text-white shadow-md shadow-blue-500/15"
+                              : "bg-stone-950 text-white"
                           }`}
                           onClick={() =>
                             updateDeviceMapping(device.deviceId, {
@@ -621,7 +642,7 @@ export default function Page() {
                             })
                           }
                         >
-                          {device.disabled ? "Show" : "Visible"}
+                          {device.disabled ? "표시하기" : "표시 중"}
                         </button>
                       </div>
                     ))}
@@ -640,18 +661,18 @@ export default function Page() {
                     <div>
                       <h2 className="font-semibold">LG ThinQ</h2>
                       <p className="text-sm text-stone-500">
-                        Official ThinQ Connect API · {lgHealth?.countryCode ?? "KR"}
+                        공식 ThinQ Connect · {lgHealth?.countryCode ?? "KR"}
                       </p>
                     </div>
                   </div>
                   <div className="flex gap-2">
                     <button
-                      className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white/70 px-4 py-2 text-sm font-medium shadow-sm hover:bg-white disabled:opacity-60"
+                      className="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-medium hover:bg-stone-50 disabled:opacity-60"
                       onClick={() => loadLgSubscriptions()}
                       disabled={!lgHealth?.configured || busy}
                     >
                       <Radio size={15} />
-                      Subscriptions
+                      구독 목록
                     </button>
                     <button
                       className="inline-flex items-center gap-2 rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-stone-900/10 hover:bg-stone-800 disabled:opacity-60"
@@ -659,19 +680,19 @@ export default function Page() {
                       disabled={busy}
                     >
                       <RefreshCw size={15} />
-                      Refresh
+                      새로고침
                     </button>
                   </div>
                 </div>
               </div>
 
               {lgHealth && !lgHealth.configured ? (
-                <div className="rounded-3xl border border-amber-200/70 bg-amber-50/75 p-5 text-sm text-amber-950 shadow-sm backdrop-blur-xl">
-                  <p className="font-semibold">LG ThinQ PAT configuration required</p>
+                <div className="rounded-3xl border border-stone-300 bg-white p-5 text-sm text-stone-900 shadow-sm">
+                  <p className="font-semibold">LG ThinQ 연결이 필요합니다</p>
                   <p className="mt-2">
                     Create an LG ThinQ Personal Access Token with device list, status, control,
                     event, push, and energy permissions. Then add
-                    <code className="mx-1 rounded bg-amber-100 px-1">LG_THINQ_PAT</code>
+                    <code className="mx-1 rounded bg-stone-100 px-1">LG_THINQ_PAT</code>
                     to Vercel and redeploy.
                   </p>
                   <a
@@ -709,7 +730,7 @@ export default function Page() {
                               <button
                                 aria-label={`Toggle ${device.alias || "LG air conditioner"}`}
                                 className={`h-9 w-16 rounded-full p-1 transition disabled:cursor-wait disabled:opacity-60 ${
-                                  lgAcState[device.deviceId] ? "bg-sky-600" : "bg-stone-300"
+                                  lgAcState[device.deviceId] ? "bg-stone-950" : "bg-stone-300"
                                 }`}
                                 disabled={lgPending.has(device.deviceId)}
                                 onClick={() => toggleLgAirConditioner(device)}
@@ -726,37 +747,37 @@ export default function Page() {
                           <div className="mt-4 flex flex-wrap gap-2">
                             <LgActionButton
                               icon={<Gauge size={14} />}
-                              label="Status"
+                              label="상태"
                               pending={lgPending.has(`${device.deviceId}:status`)}
                               onClick={() => loadLgStatus(device)}
                             />
                             <LgActionButton
                               icon={<Radio size={14} />}
-                              label="Event +"
+                              label="이벤트 구독"
                               pending={lgPending.has(`${device.deviceId}:event-on`)}
                               onClick={() => updateLgSubscription(device, "event", true)}
                             />
                             <LgActionButton
                               icon={<Radio size={14} />}
-                              label="Event −"
+                              label="이벤트 해제"
                               pending={lgPending.has(`${device.deviceId}:event-off`)}
                               onClick={() => updateLgSubscription(device, "event", false)}
                             />
                             <LgActionButton
                               icon={<Bell size={14} />}
-                              label="Push +"
+                              label="푸시 구독"
                               pending={lgPending.has(`${device.deviceId}:push-on`)}
                               onClick={() => updateLgSubscription(device, "push", true)}
                             />
                             <LgActionButton
                               icon={<Bell size={14} />}
-                              label="Push −"
+                              label="푸시 해제"
                               pending={lgPending.has(`${device.deviceId}:push-off`)}
                               onClick={() => updateLgSubscription(device, "push", false)}
                             />
                             <LgActionButton
                               icon={<Power size={14} />}
-                              label="Energy"
+                              label="전력량"
                               pending={lgPending.has(`${device.deviceId}:energy`)}
                               onClick={() => loadLgEnergy(device)}
                             />
@@ -772,13 +793,13 @@ export default function Page() {
                     })
                   ) : (
                     <div className="glass-panel rounded-3xl p-5 text-sm text-stone-500">
-                      No LG ThinQ devices were returned.
+                      연결된 LG ThinQ 기기가 없습니다.
                     </div>
                   )}
 
                   {lgDetails.subscriptions ? (
                     <div className="glass-panel rounded-3xl p-5 sm:p-6">
-                      <h3 className="mb-3 font-semibold">Subscription status</h3>
+                      <h3 className="mb-3 font-semibold">구독 상태</h3>
                       <pre className="max-h-72 overflow-auto rounded-2xl bg-stone-950/95 p-4 text-xs text-stone-100 shadow-inner">
                         {JSON.stringify(lgDetails.subscriptions, null, 2)}
                       </pre>
@@ -793,7 +814,7 @@ export default function Page() {
             <div className="glass-panel rounded-3xl p-5 sm:p-6">
               <div className="mb-4 flex items-center gap-2">
                 <Settings size={18} />
-                <h2 className="font-semibold">Settings</h2>
+                <h2 className="font-semibold">설정</h2>
               </div>
               <dl className="grid gap-3 text-sm sm:grid-cols-2">
                 {settings
@@ -812,11 +833,11 @@ export default function Page() {
             <div className="glass-panel rounded-3xl p-5 sm:p-6">
               <div className="mb-4 flex items-center gap-2">
                 <TerminalSquare size={18} />
-                <h2 className="font-semibold">Logs</h2>
+                <h2 className="font-semibold">기록</h2>
               </div>
               <div className="space-y-2">
                 {logs.map((entry) => (
-                  <div key={`${entry.timestamp}-${entry.message}`} className="rounded-2xl border border-white/80 bg-white/55 px-4 py-3 text-sm shadow-sm">
+                  <div key={`${entry.timestamp}-${entry.message}`} className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm">
                     <div className="flex items-center justify-between gap-3">
                       <span className="font-medium uppercase text-stone-700">{entry.level}</span>
                       <time className="text-xs text-stone-500">{new Date(entry.timestamp).toLocaleString()}</time>
@@ -857,7 +878,7 @@ function LightRow({
   onToggle: () => void;
 }) {
   return (
-    <div className="flex min-h-20 items-center justify-between gap-3 rounded-2xl border border-white/80 bg-white/55 px-4 py-3 shadow-sm">
+    <div className="flex min-h-20 items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3">
       <div>
         <p className="font-medium">{device.displayName}</p>
         <p className="text-xs text-stone-500">{device.deviceId}</p>
@@ -865,7 +886,7 @@ function LightRow({
       <button
         aria-label={`Toggle ${device.displayName}`}
         className={`h-8 w-14 rounded-full p-1 transition disabled:cursor-wait disabled:opacity-60 ${
-          checked ? "bg-amber-400 shadow-md shadow-amber-400/25" : "bg-stone-300/90"
+          checked ? "bg-stone-950" : "bg-stone-300"
         }`}
         disabled={disabled}
         onClick={onToggle}
@@ -889,7 +910,7 @@ function LgActionButton({
 }) {
   return (
     <button
-      className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white/65 px-3.5 py-2 text-xs font-medium shadow-sm hover:bg-white disabled:cursor-wait disabled:opacity-50"
+      className="inline-flex items-center gap-1.5 rounded-full border border-stone-300 bg-white px-3.5 py-2 text-xs font-medium hover:bg-stone-50 disabled:cursor-wait disabled:opacity-50"
       disabled={pending}
       onClick={onClick}
     >

@@ -1,128 +1,178 @@
-<p align="center">
-  <img alt="logo" src="https://github.com/OrigamiDream/homebridge-daelim-smarthome/blob/main/branding/smarthome+homebridge.png?raw=true" height="140px">
-</p>
+# My Smart Home
 
-# Homebridge DL E&C Smart Home
+Smart eLife를 더 편하게 사용하기 위해 만드는 개인용 스마트홈 프로젝트입니다.
 
-[![Verified by Homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
-[![Downloads](https://img.shields.io/npm/dt/homebridge-daelim-smarthome.svg?color=critical)](https://www.npmjs.com/package/homebridge-daelim-smarthome)
-[![Version](https://img.shields.io/npm/v/homebridge-daelim-smarthome)](https://www.npmjs.com/package/homebridge-daelim-smarthome)
+기존 `homebridge-daelim-smarthome`의 검증된 Smart eLife 통신 로직을 기반으로,
+브라우저 대시보드와 Apple Watch 단축어에서 조명과 엘리베이터를 제어할 수 있도록
+확장하고 있습니다.
 
-e편한세상 및 아크로 계열 아파트 단지를 위한 [Homebridge](https://github.com/homebridge/homebridge) 인증된 플러그인
+> 이 프로젝트는 개인 사용을 목적으로 하며 DL E&C 또는 Smart eLife의 공식
+> 프로젝트가 아닙니다.
 
-**e편한세상 스마트홈 2.0** 및 **Smart eLife** 앱 사용자 대상으로 다음의 기능들을 지원합니다.
-1. 전등<sup>[1](#lightbulb)</sup>
-2. 난방
-3. 콘센트
-4. 환풍기<sup>[2](#fans)</sup>
-5. 시스템 에어컨
-6. 가스 밸브 (단방향)
-7. 엘레베이터 호출 (도착 알림은 Smart eLife 한정 지원)
-8. 세대현관 및 공동현관 출입 모션 센서
-9. 입차 모션 센서
-10. 세대현관 및 공동현관 방문자 이미지 표시<sup>[3](#hksv)</sup>
-11. 세대현관 및 공동현관 방문자 알림
+## 지금 할 수 있는 것
 
-> [!WARNING]
-> e편한세상 스마트홈 2.0 및 Smart eLife 앱은 동시접속 및 다중 로그인을 지원하지 않습니다.
-> 따라서 이 플러그인 전용의 세대원 계정을 앱에서 하나 더 추가하시거나, 기존 계정을 로그아웃하신 후 사용하시기 바랍니다.
-> 위 주의사항을 따르지 않을 시 로그인/로그아웃이 무한정 반복되며 정상적인 이용이 불가능할 수 있습니다.
+- Smart eLife 이메일·비밀번호 로그인
+- ENV를 사용한 서버 자동 로그인
+- 세대 기기 및 현재 상태 조회
+- 조명 켜기·끄기
+- 엘리베이터 호출
+- Apple Watch 및 iPhone 단축어용 엘리베이터 API
+- 모바일 대응 Next.js 대시보드
+- 기기 이름 매핑, 설정, 로그 및 상태 확인
+- 기존 Homebridge Smart eLife 기능 유지
 
-## 설치 요구사항
+LG ThinQ 연동과 추가 자동화는 Smart eLife 기능이 안정화된 후 별도 Provider로
+추가할 예정입니다.
 
-<img alt="node" src="https://img.shields.io/badge/node-%3E%3D14.15-brightgreen"> <img alt="homebridge" src="https://img.shields.io/badge/homebridge-%3E%3D1.5.1-brightgreen"> <img alt="iOS" src="https://img.shields.io/badge/iOS-%3E%3D12.0.0-brightgreen">
+## 구성
 
-## 설치
-
-### Homebridge Config UI X를 이용한 설치
-
-1. 가장 마지막 버전의 Homebridge Config UI X가 설치되어 있다면 검색 페이지에서 `homebridge-daelim-smarthome`을 검색하여 설치할 수 있습니다.
-2. 설치 후 플러그인 구성 지침에 따르세요.
-
-### Terminal에서 설치
-
-<small>Node.js 환경을 필요로합니다.</small>
-
-```
-sudo npm install -g --unsafe-perm homebridge-daelim-smarthome
+```text
+Browser / Apple Watch Shortcut
+              │
+       Next.js Dashboard
+              │
+           REST API
+              │
+   Existing Smart eLife Client
+              │
+          Smart eLife
 ```
 
-### 직접 빌드하여 설치 (macOS, Linux 전용)
+Smart eLife 인증과 기기 통신을 새로 구현하지 않고 기존 클라이언트를 그대로
+사용합니다. 웹 대시보드는 기존 기능을 호출하기 위한 가벼운 인터페이스입니다.
 
-<small>Node.js 환경을 필요로합니다.</small>
+## 로컬 실행
 
-1. `git clone https://github.com/OrigamiDream/homebridge-daelim-smarthome.git`을 통해 레포지토리를 로컬에 설치합니다.
-2. `cd homebridge-daelim-smarthome`으로 로컬에 설치된 레포지토리로 이동합니다.
-3. `npm i && npm run build`로 플러그인을 빌드합니다.
-4. `npm link`로 npm 패키지를 등록합니다.
-5. Homebridge-UI 웹사이트로 이동하면 플러그인 목록에서 `homebridge-daelim-smarthome`을 찾을 수 있습니다.
-6. 설정 버튼을 눌러 플러그인 구성 지침에 따르세요.
+Node.js 20.19 이상이 필요합니다.
 
-### 직접 빌드하여 설치 (Homebridge Docker Terminal 내에서 작업)
-
-1. `git clone https://github.com/OrigamiDream/homebridge-daelim-smarthome.git`을 통해 레포지토리를 로컬에 설치합니다.
-2. `npm install ./homebridge-daelim-smarthome`으로 플러그인을 빌드 및 설치합니다.
-3. 문제가 생긴 경우, `npm install hap-nodejs` 실행 후 Step 2 를 다시 수행합니다.
-4. Homebridge-UI 웹사이트로 이동하면 플러그인 목록에서 `homebridge-daelim-smarthome`을 찾을 수 있습니다.
-5. 설정 버튼을 눌러 플러그인 구성 지침에 따르세요.
-
-<sub><b id="lightbulb">1</b> 세대에 따라 거실 전등 밝기를 3단계 혹은 8단계로 조절 가능합니다.</sub><br>
-<sub><b id="fans">2</b> 일부 세대의 경우 환풍기 풍량 조절이 가능합니다.</sub><br>
-<sub><b id="hksv">3</b> HomeKit Secure Video를 통해 표기되며, 홈킷 허브인 Apple TV 혹은 HomePod이 있어야 합니다.</sub>
-
-## Smart eLife dashboard
-
-Install the dashboard dependencies once:
+저장소를 받은 뒤 의존성을 설치합니다.
 
 ```powershell
+npm install
 npm --prefix frontend install
 ```
 
-Run the dashboard in development mode:
+`frontend/.env` 파일을 만들고 Smart eLife 계정을 입력합니다.
+
+```dotenv
+SMART_ELIFE_EMAIL=your-email@example.com
+SMART_ELIFE_PASSWORD=your-password
+```
+
+`SMART_ELIFE_EMAIL`은 사용자 이름이 아니라 Smart eLife 앱에서 사용하는 이메일
+주소입니다.
+
+필요한 경우 아래 값을 추가할 수 있습니다.
+
+```dotenv
+SMART_ELIFE_UUID=authorized-device-uuid
+```
+
+UUID를 생략하면 이메일을 바탕으로 동일한 값이 자동 생성됩니다. 월패드 인증을
+마친 뒤에는 UUID를 변경하지 않는 것이 좋습니다.
+
+개발 서버를 실행합니다.
 
 ```powershell
 npm run dashboard:dev
 ```
 
-For production, build the complete project and start the dashboard:
+브라우저에서 `http://localhost:3000`을 열면 됩니다.
+
+## 검사 및 프로덕션 실행
+
+백엔드 빌드, TypeScript, ESLint, Next.js 빌드를 한 번에 검사합니다.
+
+```powershell
+npm run check:all
+```
+
+로컬 프로덕션 모드로 실행하려면:
 
 ```powershell
 npm run build:all
 npm run dashboard:start
 ```
 
-Open `http://localhost:3000`, sign in with the Smart eLife account, and enter the
-wallpad passcode when requested. Device refreshes and light controls reuse the
-existing Smart eLife client.
+개발 서버는 `.next-dev`, 프로덕션 빌드는 `.next`를 사용하므로 동시에 빌드해도
+캐시가 충돌하지 않습니다.
 
-### Vercel deployment
+## Vercel 배포
 
-Create a Vercel project for this repository and set its Root Directory to
-`frontend`. Keep the "Include source files outside of the Root Directory"
-setting enabled because the dashboard imports the existing Smart eLife client
-from the repository root.
-
-Add these Environment Variables in the Vercel project:
+1. 이 GitHub 저장소를 Vercel에서 Import합니다.
+2. Root Directory를 `frontend`로 지정합니다.
+3. **Include source files outside of the Root Directory**를 활성화합니다.
+4. 리전은 `icn1`을 사용합니다.
+5. Production Environment Variables에 다음 값을 등록합니다.
 
 ```text
 SMART_ELIFE_EMAIL
 SMART_ELIFE_PASSWORD
 ```
 
-`SMART_ELIFE_EMAIL` is the email address used to sign in to the Smart eLife
-app. The legacy `SMART_ELIFE_USERNAME` name is also accepted for compatibility.
+`SMART_ELIFE_UUID`는 선택 사항입니다. 환경변수를 변경한 경우 새 배포를 해야
+적용됩니다.
 
-`SMART_ELIFE_UUID` is optional. If it is not set, the existing deterministic
-UUID calculation is used. Once the wallpad has authorized a UUID, do not change
-it.
+Vercel Function은 사용하지 않을 때 종료될 수 있습니다. 이 프로젝트는 새
+인스턴스가 시작되면 ENV 계정으로 자동 로그인하지만, 오랫동안 사용하지 않은 뒤
+첫 호출은 평소보다 느릴 수 있습니다.
 
-The Apple Shortcuts endpoint is:
+## Apple Watch 단축어
+
+단축어 앱에서 **URL 콘텐츠 가져오기** 동작을 추가합니다.
 
 ```text
-POST https://your-project.vercel.app/api/shortcut/elevator
+URL: https://your-project.vercel.app/api/shortcut/elevator
+Method: POST
 ```
 
-The endpoint automatically signs in from the Environment Variables after a
-cold start and reuses the in-memory client while the Vercel function instance
-remains warm. If wallpad authorization is requested, open the dashboard once
-and enter the passcode.
+응답 예시:
+
+```json
+{
+  "ok": true,
+  "action": "elevator",
+  "message": "Elevator call sent."
+}
+```
+
+이 단축어를 Apple Watch에 표시하도록 설정하면 손목에서 바로 엘리베이터를
+호출할 수 있습니다.
+
+## API
+
+| Method | Endpoint | 기능 |
+| --- | --- | --- |
+| `GET` | `/api/health` | ENV, 로그인 및 기기 상태 확인 |
+| `GET` | `/api/devices` | Smart eLife 기기 조회 |
+| `POST` | `/api/elevator` | 대시보드 엘리베이터 호출 |
+| `POST` | `/api/shortcut/elevator` | Apple 단축어 엘리베이터 호출 |
+| `POST` | `/api/light` | 조명 제어 |
+| `GET` | `/api/logs` | 서버 로그 확인 |
+| `GET` | `/api/settings` | 현재 설정 확인 |
+
+현재 단축어 API에는 별도의 접근 토큰이 없습니다. 개인용이라도 배포 URL을 공개
+저장소, 게시글 또는 스크린샷에 노출하지 않는 것을 권장합니다.
+
+## 프로젝트 방향
+
+우선순위는 다음과 같습니다.
+
+1. Smart eLife 로그인 안정화
+2. 엘리베이터 호출
+3. 조명 제어
+4. 웹 대시보드
+5. LG ThinQ 연동
+6. 추가 자동화
+
+복잡한 SaaS 구조, 다중 사용자, 조직 및 권한 시스템은 만들지 않습니다. 한 사람이
+직접 사용하기 좋은 단순하고 읽기 쉬운 구조를 지향합니다.
+
+## 기반 프로젝트
+
+이 저장소는
+[OrigamiDream/homebridge-daelim-smarthome](https://github.com/OrigamiDream/homebridge-daelim-smarthome)
+프로젝트의 fork를 기반으로 합니다. Smart eLife 및 Homebridge 구현을 공개해 준
+원작자와 기여자들에게 감사드립니다.
+
+원본 프로젝트와 동일하게 GPL-3.0 라이선스를 따릅니다.

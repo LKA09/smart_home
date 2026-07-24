@@ -25,6 +25,21 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "node-fetch": [
+        "./node_modules/@types/node-fetch/index.d.ts"
+      ],
+      "ws": [
+        "./node_modules/@types/ws/index.d.ts"
+      ],
+      "axios": [
+        "./node_modules/axios/index.d.ts"
+      ],
+      "@eneris/push-receiver": [
+        "./node_modules/@eneris/push-receiver/dist/index.d.ts"
+      ],
+      "homebridge": [
+        "./node_modules/homebridge/dist/index.d.ts"
       ]
     }
   },

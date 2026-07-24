@@ -2,14 +2,19 @@
 
 import {
   Activity,
+  AirVent,
   ArrowUp,
+  Bell,
   CheckCircle2,
+  Gauge,
   Home,
   Lightbulb,
   List,
   Lock,
   LogIn,
   PanelRight,
+  Power,
+  Radio,
   RefreshCw,
   Settings,
   TerminalSquare,
@@ -56,8 +61,25 @@ type DeviceMapping = {
   hidden?: boolean;
 };
 
+type LgThinQHealth = {
+  ok: boolean;
+  configured: boolean;
+  countryCode: string;
+  clientIdConfigured: boolean;
+};
+
+type LgThinQDevice = {
+  deviceId: string;
+  deviceType: string;
+  alias: string;
+  modelName: string;
+  reportable: boolean;
+  raw: Record<string, unknown>;
+};
+
 const DEVICE_MAPPINGS_KEY = "smart-home.device-mappings";
-const tabs = ["Dashboard", "Devices", "Settings", "Logs"] as const;
+const LG_AIR_CONDITIONER_TYPE = "DEVICE_AIR_CONDITIONER";
+const tabs = ["Dashboard", "Devices", "LG ThinQ", "Settings", "Logs"] as const;
 type Tab = (typeof tabs)[number];
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
@@ -91,6 +113,11 @@ export default function Page() {
   const [lightState, setLightState] = useState<Record<string, boolean>>({});
   const [pendingLights, setPendingLights] = useState<Set<string>>(() => new Set());
   const [deviceMappings, setDeviceMappings] = useState<Record<string, DeviceMapping>>({});
+  const [lgHealth, setLgHealth] = useState<LgThinQHealth | null>(null);
+  const [lgDevices, setLgDevices] = useState<LgThinQDevice[]>([]);
+  const [lgAcState, setLgAcState] = useState<Record<string, boolean>>({});
+  const [lgPending, setLgPending] = useState<Set<string>>(() => new Set());
+  const [lgDetails, setLgDetails] = useState<Record<string, unknown>>({});
 
   const mappedDevices = useMemo(
     () =>
@@ -155,6 +182,14 @@ export default function Page() {
     }
     refresh().catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "LG ThinQ") {
+      refreshLgThinQ().catch((error) =>
+        setMessage(error instanceof Error ? error.message : "LG ThinQ refresh failed."),
+      );
+    }
+  }, [activeTab]);
 
   function updateDeviceMapping(deviceId: string, patch: DeviceMapping) {
     setDeviceMappings((current) => {
@@ -278,6 +313,138 @@ export default function Page() {
     }
   }
 
+  async function refreshLgThinQ() {
+    const nextHealth = await api<LgThinQHealth>("/api/lg-thinq/health");
+    setLgHealth(nextHealth);
+    if (!nextHealth.configured) {
+      setLgDevices([]);
+      setLgAcState({});
+      return;
+    }
+    const response = await api<{ devices: LgThinQDevice[] }>("/api/lg-thinq/devices");
+    setLgDevices(response.devices);
+    const airConditioners = response.devices.filter(
+      (device) => device.deviceType === LG_AIR_CONDITIONER_TYPE,
+    );
+    const statuses = await Promise.allSettled(
+      airConditioners.map(async (device) => ({
+        device,
+        status: await api<{ status: Record<string, unknown> }>(
+          `/api/lg-thinq/status?deviceId=${encodeURIComponent(device.deviceId)}`,
+        ),
+      })),
+    );
+    setLgAcState((current) => {
+      const next = { ...current };
+      for (const result of statuses) {
+        if (result.status === "fulfilled") {
+          const operationMode = findNestedValue(
+            result.value.status.status,
+            "airConOperationMode",
+          );
+          if (typeof operationMode === "string") {
+            next[result.value.device.deviceId] = !operationMode.toUpperCase().includes("OFF");
+          }
+        }
+      }
+      return next;
+    });
+  }
+
+  async function toggleLgAirConditioner(device: LgThinQDevice) {
+    if (lgPending.has(device.deviceId)) return;
+    const on = !lgAcState[device.deviceId];
+    setLgPending((current) => new Set(current).add(device.deviceId));
+    setLgAcState((current) => ({ ...current, [device.deviceId]: on }));
+    setMessage("");
+    try {
+      const result = await api<{ ok: boolean; on: boolean; mode: string }>(
+        "/api/lg-thinq/air-conditioner",
+        {
+          method: "POST",
+          body: JSON.stringify({ deviceId: device.deviceId, on }),
+        },
+      );
+      setLgAcState((current) => ({ ...current, [device.deviceId]: result.on }));
+      setMessage(`${device.alias || device.modelName || "LG air conditioner"} ${result.on ? "on" : "off"}.`);
+    } catch (error) {
+      setLgAcState((current) => ({ ...current, [device.deviceId]: !on }));
+      setMessage(error instanceof Error ? error.message : "LG air conditioner control failed.");
+    } finally {
+      setLgPending((current) => {
+        const next = new Set(current);
+        next.delete(device.deviceId);
+        return next;
+      });
+    }
+  }
+
+  async function loadLgStatus(device: LgThinQDevice) {
+    await runLgDeviceAction(device, "status", async () => {
+      const result = await api<{ status: Record<string, unknown> }>(
+        `/api/lg-thinq/status?deviceId=${encodeURIComponent(device.deviceId)}`,
+      );
+      return result.status;
+    });
+  }
+
+  async function updateLgSubscription(
+    device: LgThinQDevice,
+    kind: "event" | "push",
+    subscribe: boolean,
+  ) {
+    await runLgDeviceAction(device, `${kind}-${subscribe ? "on" : "off"}`, async () =>
+      api<Record<string, unknown>>("/api/lg-thinq/subscriptions", {
+        method: subscribe ? "POST" : "DELETE",
+        body: JSON.stringify({ deviceId: device.deviceId, kind }),
+      }),
+    );
+  }
+
+  async function loadLgEnergy(device: LgThinQDevice) {
+    await runLgDeviceAction(device, "energy", async () =>
+      api<Record<string, unknown>>(
+        `/api/lg-thinq/energy?recent=true&deviceId=${encodeURIComponent(device.deviceId)}`,
+      ),
+    );
+  }
+
+  async function loadLgSubscriptions() {
+    setBusy(true);
+    setMessage("");
+    try {
+      const result = await api<Record<string, unknown>>("/api/lg-thinq/subscriptions");
+      setLgDetails((current) => ({ ...current, subscriptions: result }));
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "LG ThinQ subscription lookup failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function runLgDeviceAction(
+    device: LgThinQDevice,
+    action: string,
+    handler: () => Promise<unknown>,
+  ) {
+    const key = `${device.deviceId}:${action}`;
+    setLgPending((current) => new Set(current).add(key));
+    setMessage("");
+    try {
+      const result = await handler();
+      setLgDetails((current) => ({ ...current, [device.deviceId]: result }));
+      setMessage(`${device.alias || device.modelName || device.deviceId}: ${action} completed.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : `LG ThinQ ${action} failed.`);
+    } finally {
+      setLgPending((current) => {
+        const next = new Set(current);
+        next.delete(key);
+        return next;
+      });
+    }
+  }
+
   return (
     <main className="min-h-screen">
       <header className="border-b border-stone-200 bg-white">
@@ -288,7 +455,7 @@ export default function Page() {
             </div>
             <div>
               <h1 className="text-xl font-semibold">Smart Home</h1>
-              <p className="text-sm text-stone-500">Smart eLife dashboard</p>
+              <p className="text-sm text-stone-500">Smart eLife + LG ThinQ</p>
             </div>
           </div>
           <button
@@ -321,7 +488,7 @@ export default function Page() {
             <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{message}</div>
           ) : null}
 
-          {!signedIn ? (
+          {!signedIn && activeTab !== "LG ThinQ" ? (
             <div className="grid gap-4 md:grid-cols-2">
               <form className="rounded-md border border-stone-200 bg-white p-4" onSubmit={handleLogin}>
                 <div className="mb-4 flex items-center gap-2">
@@ -460,6 +627,164 @@ export default function Page() {
             </div>
           ) : null}
 
+          {activeTab === "LG ThinQ" ? (
+            <div className="space-y-4">
+              <div className="rounded-md border border-stone-200 bg-white p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <AirVent size={20} />
+                    <div>
+                      <h2 className="font-semibold">LG ThinQ</h2>
+                      <p className="text-sm text-stone-500">
+                        Official ThinQ Connect API · {lgHealth?.countryCode ?? "KR"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      className="inline-flex items-center gap-2 rounded-md border border-stone-300 px-3 py-2 text-sm disabled:opacity-60"
+                      onClick={() => loadLgSubscriptions()}
+                      disabled={!lgHealth?.configured || busy}
+                    >
+                      <Radio size={15} />
+                      Subscriptions
+                    </button>
+                    <button
+                      className="inline-flex items-center gap-2 rounded-md bg-stone-900 px-3 py-2 text-sm text-white disabled:opacity-60"
+                      onClick={() => refreshLgThinQ().catch((error) => setMessage(String(error)))}
+                      disabled={busy}
+                    >
+                      <RefreshCw size={15} />
+                      Refresh
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {lgHealth && !lgHealth.configured ? (
+                <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+                  <p className="font-semibold">LG ThinQ PAT configuration required</p>
+                  <p className="mt-2">
+                    Create an LG ThinQ Personal Access Token with device list, status, control,
+                    event, push, and energy permissions. Then add
+                    <code className="mx-1 rounded bg-amber-100 px-1">LG_THINQ_PAT</code>
+                    to Vercel and redeploy.
+                  </p>
+                  <a
+                    className="mt-3 inline-block font-medium underline"
+                    href="https://connect-pat.lgthinq.com/"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open LG ThinQ PAT
+                  </a>
+                </div>
+              ) : null}
+
+              {lgHealth?.configured ? (
+                <div className="space-y-3">
+                  {lgDevices.length ? (
+                    lgDevices.map((device) => {
+                      const isAirConditioner = device.deviceType === LG_AIR_CONDITIONER_TYPE;
+                      return (
+                        <div key={device.deviceId} className="rounded-md border border-stone-200 bg-white p-4">
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                {isAirConditioner ? <AirVent size={18} /> : <Power size={18} />}
+                                <h3 className="font-semibold">
+                                  {device.alias || device.modelName || "LG ThinQ device"}
+                                </h3>
+                              </div>
+                              <p className="mt-1 break-all text-xs text-stone-500">{device.deviceId}</p>
+                              <p className="text-xs text-stone-500">
+                                {device.deviceType} · {device.modelName || "Unknown model"}
+                              </p>
+                            </div>
+                            {isAirConditioner ? (
+                              <button
+                                aria-label={`Toggle ${device.alias || "LG air conditioner"}`}
+                                className={`h-9 w-16 rounded-full p-1 transition disabled:cursor-wait disabled:opacity-60 ${
+                                  lgAcState[device.deviceId] ? "bg-sky-600" : "bg-stone-300"
+                                }`}
+                                disabled={lgPending.has(device.deviceId)}
+                                onClick={() => toggleLgAirConditioner(device)}
+                              >
+                                <span
+                                  className={`block h-7 w-7 rounded-full bg-white transition ${
+                                    lgAcState[device.deviceId] ? "translate-x-7" : "translate-x-0"
+                                  }`}
+                                />
+                              </button>
+                            ) : null}
+                          </div>
+
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <LgActionButton
+                              icon={<Gauge size={14} />}
+                              label="Status"
+                              pending={lgPending.has(`${device.deviceId}:status`)}
+                              onClick={() => loadLgStatus(device)}
+                            />
+                            <LgActionButton
+                              icon={<Radio size={14} />}
+                              label="Event +"
+                              pending={lgPending.has(`${device.deviceId}:event-on`)}
+                              onClick={() => updateLgSubscription(device, "event", true)}
+                            />
+                            <LgActionButton
+                              icon={<Radio size={14} />}
+                              label="Event −"
+                              pending={lgPending.has(`${device.deviceId}:event-off`)}
+                              onClick={() => updateLgSubscription(device, "event", false)}
+                            />
+                            <LgActionButton
+                              icon={<Bell size={14} />}
+                              label="Push +"
+                              pending={lgPending.has(`${device.deviceId}:push-on`)}
+                              onClick={() => updateLgSubscription(device, "push", true)}
+                            />
+                            <LgActionButton
+                              icon={<Bell size={14} />}
+                              label="Push −"
+                              pending={lgPending.has(`${device.deviceId}:push-off`)}
+                              onClick={() => updateLgSubscription(device, "push", false)}
+                            />
+                            <LgActionButton
+                              icon={<Power size={14} />}
+                              label="Energy"
+                              pending={lgPending.has(`${device.deviceId}:energy`)}
+                              onClick={() => loadLgEnergy(device)}
+                            />
+                          </div>
+
+                          {lgDetails[device.deviceId] ? (
+                            <pre className="mt-4 max-h-72 overflow-auto rounded-md bg-stone-950 p-3 text-xs text-stone-100">
+                              {JSON.stringify(lgDetails[device.deviceId], null, 2)}
+                            </pre>
+                          ) : null}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="rounded-md border border-stone-200 bg-white p-4 text-sm text-stone-500">
+                      No LG ThinQ devices were returned.
+                    </div>
+                  )}
+
+                  {lgDetails.subscriptions ? (
+                    <div className="rounded-md border border-stone-200 bg-white p-4">
+                      <h3 className="mb-3 font-semibold">Subscription status</h3>
+                      <pre className="max-h-72 overflow-auto rounded-md bg-stone-950 p-3 text-xs text-stone-100">
+                        {JSON.stringify(lgDetails.subscriptions, null, 2)}
+                      </pre>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           {signedIn && activeTab === "Settings" ? (
             <div className="rounded-md border border-stone-200 bg-white p-4">
               <div className="mb-4 flex items-center gap-2">
@@ -547,7 +872,50 @@ function LightRow({
   );
 }
 
+function LgActionButton({
+  icon,
+  label,
+  pending,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  pending: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className="inline-flex items-center gap-1.5 rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-50 disabled:cursor-wait disabled:opacity-50"
+      disabled={pending}
+      onClick={onClick}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
 function isDeviceOn(device: Device) {
   const status = String(device.operation?.status ?? "").toLowerCase();
   return status === "on" || status === "1" || status === "true";
+}
+
+function findNestedValue(value: unknown, key: string): unknown {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findNestedValue(item, key);
+      if (found !== undefined) return found;
+    }
+    return undefined;
+  }
+  if (typeof value !== "object" || value === null) {
+    return undefined;
+  }
+  const record = value as Record<string, unknown>;
+  if (key in record) return record[key];
+  for (const item of Object.values(record)) {
+    const found = findNestedValue(item, key);
+    if (found !== undefined) return found;
+  }
+  return undefined;
 }

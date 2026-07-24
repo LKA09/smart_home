@@ -20,6 +20,7 @@
     "node-fetch": "2.6.7",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "thinqconnect": "^0.9.10-beta",
     "ws": "8.21.0"
   },
   "devDependencies": {

@@ -21,8 +21,8 @@ Smart eLife를 더 편하게 사용하기 위해 만드는 개인용 스마트�
 - 기기 이름 매핑, 설정, 로그 및 상태 확인
 - 기존 Homebridge Smart eLife 기능 유지
 
-LG ThinQ 연동과 추가 자동화는 Smart eLife 기능이 안정화된 후 별도 Provider로
-추가할 예정입니다.
+LG ThinQ는 공식 ThinQ Connect API를 사용하는 독립 Provider로 추가되어 있으며,
+Smart eLife 구현과 서로 의존하지 않습니다.
 
 ## 구성
 
@@ -108,14 +108,39 @@ npm run dashboard:start
 ```text
 SMART_ELIFE_EMAIL
 SMART_ELIFE_PASSWORD
+LG_THINQ_PAT
+LG_THINQ_COUNTRY
 ```
 
 `SMART_ELIFE_UUID`는 선택 사항입니다. 환경변수를 변경한 경우 새 배포를 해야
 적용됩니다.
 
+`LG_THINQ_PAT`는 [LG ThinQ PAT 페이지](https://connect-pat.lgthinq.com/)에서
+발급합니다. 토큰에는 기기 목록, 상태, 제어, 이벤트 구독, 푸시 구독, 전력량 조회
+권한을 모두 선택해야 합니다. 한국 계정은 `LG_THINQ_COUNTRY=KR`을 사용합니다.
+
+`LG_THINQ_CLIENT_ID`에는 한 번 생성한 UUID v4를 등록하는 것을 권장합니다.
+생략하면 PAT를 기반으로 고정된 UUID가 자동 생성됩니다.
+
 Vercel Function은 사용하지 않을 때 종료될 수 있습니다. 이 프로젝트는 새
 인스턴스가 시작되면 ENV 계정으로 자동 로그인하지만, 오랫동안 사용하지 않은 뒤
 첫 호출은 평소보다 느릴 수 있습니다.
+
+## LG ThinQ
+
+대시보드의 `LG ThinQ` 탭에서 다음 기능을 사용할 수 있습니다.
+
+- 등록 기기 목록 조회
+- 기기 상태 조회
+- 에어컨 켜기·끄기
+- 공식 Profile Payload를 사용하는 범용 기기 제어 API
+- 기기 이벤트 구독 및 해제
+- 기기 푸시 구독 및 해제
+- 전력량 Profile 및 최근 7일 사용량 조회
+
+이벤트와 푸시 구독은 LG 서버에 정상 등록되지만 Vercel Function은 영구 실행
+프로세스가 아니므로 MQTT 메시지를 24시간 계속 수신해 저장하지는 않습니다.
+구독 현황과 등록·해제는 대시보드에서 관리할 수 있습니다.
 
 ## Apple Watch 단축어
 
@@ -150,6 +175,12 @@ Method: POST
 | `POST` | `/api/light` | 조명 제어 |
 | `GET` | `/api/logs` | 서버 로그 확인 |
 | `GET` | `/api/settings` | 현재 설정 확인 |
+| `GET` | `/api/lg-thinq/devices` | LG ThinQ 기기 목록 |
+| `GET` | `/api/lg-thinq/status?deviceId=...` | LG ThinQ 기기 상태 |
+| `POST` | `/api/lg-thinq/control` | 공식 Payload로 범용 기기 제어 |
+| `POST` | `/api/lg-thinq/air-conditioner` | LG 에어컨 전원 제어 |
+| `GET/POST/DELETE` | `/api/lg-thinq/subscriptions` | 이벤트·푸시 구독 관리 |
+| `GET` | `/api/lg-thinq/energy` | 전력 Profile·사용량 조회 |
 
 현재 단축어 API에는 별도의 접근 토큰이 없습니다. 개인용이라도 배포 URL을 공개
 저장소, 게시글 또는 스크린샷에 노출하지 않는 것을 권장합니다.
@@ -162,8 +193,8 @@ Method: POST
 2. 엘리베이터 호출
 3. 조명 제어
 4. 웹 대시보드
-5. LG ThinQ 연동
-6. 추가 자동화
+5. LG ThinQ 연동 및 에어컨 제어
+6. 추가 자동화와 이벤트 저장
 
 복잡한 SaaS 구조, 다중 사용자, 조직 및 권한 시스템은 만들지 않습니다. 한 사람이
 직접 사용하기 좋은 단순하고 읽기 쉬운 구조를 지향합니다.

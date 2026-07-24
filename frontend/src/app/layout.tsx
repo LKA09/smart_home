@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Smart Home",
-  description: "Personal Smart eLife dashboard",
+  description: "Smart eLife와 LG ThinQ를 한곳에서 제어하는 개인용 스마트 홈",
 };
 
 export default function RootLayout({
@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ko">
       <body>{children}</body>
     </html>
   );

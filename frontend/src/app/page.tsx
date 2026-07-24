@@ -446,21 +446,21 @@ export default function Page() {
   }
 
   return (
-    <main className="min-h-screen">
-      <header className="border-b border-stone-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+    <main className="min-h-screen pb-10">
+      <header className="sticky top-0 z-20 border-b border-white/70 bg-white/65 backdrop-blur-2xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-700 text-white">
-              <Home size={22} />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20">
+              <Home size={21} strokeWidth={2.2} />
             </div>
             <div>
-              <h1 className="text-xl font-semibold">Smart Home</h1>
-              <p className="text-sm text-stone-500">Smart eLife + LG ThinQ</p>
+              <h1 className="text-xl font-semibold tracking-tight text-stone-950">Smart Home</h1>
+              <p className="text-xs font-medium text-stone-500">Smart eLife · LG ThinQ</p>
             </div>
           </div>
           <button
             aria-label="Refresh"
-            className="rounded-md border border-stone-300 bg-white p-2 text-stone-700 hover:bg-stone-50"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/80 text-blue-600 shadow-sm hover:bg-white"
             onClick={() => refresh().catch((error) => setMessage(String(error)))}
           >
             <RefreshCw size={18} />
@@ -468,13 +468,15 @@ export default function Page() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-6xl gap-4 px-4 py-5 lg:grid-cols-[220px_1fr]">
-        <nav className="flex gap-2 overflow-x-auto lg:block lg:space-y-2">
+      <div className="mx-auto grid max-w-7xl gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[220px_1fr] lg:gap-7 lg:py-8">
+        <nav className="glass-panel flex gap-1 overflow-x-auto rounded-2xl p-1.5 lg:sticky lg:top-24 lg:block lg:h-fit lg:space-y-1">
           {tabs.map((tab) => (
             <button
               key={tab}
-              className={`min-w-max rounded-md px-3 py-2 text-sm font-medium ${
-                activeTab === tab ? "bg-emerald-700 text-white" : "bg-white text-stone-700 hover:bg-stone-50"
+              className={`min-w-max rounded-xl px-3.5 py-2.5 text-sm font-medium lg:w-full lg:text-left ${
+                activeTab === tab
+                  ? "bg-white text-stone-950 shadow-sm ring-1 ring-black/5"
+                  : "text-stone-500 hover:bg-white/55 hover:text-stone-900"
               }`}
               onClick={() => setActiveTab(tab)}
             >
@@ -483,14 +485,14 @@ export default function Page() {
           ))}
         </nav>
 
-        <section className="space-y-4">
+        <section className="min-w-0 space-y-5">
           {message ? (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{message}</div>
+            <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm font-medium text-amber-900 shadow-sm backdrop-blur-xl">{message}</div>
           ) : null}
 
           {!signedIn && activeTab !== "LG ThinQ" ? (
             <div className="grid gap-4 md:grid-cols-2">
-              <form className="rounded-md border border-stone-200 bg-white p-4" onSubmit={handleLogin}>
+              <form className="glass-panel rounded-3xl p-5 sm:p-6" onSubmit={handleLogin}>
                 <div className="mb-4 flex items-center gap-2">
                   <LogIn size={18} />
                   <h2 className="font-semibold">Login</h2>
@@ -498,7 +500,7 @@ export default function Page() {
                 <label className="mb-3 block text-sm">
                   <span className="mb-1 block text-stone-600">Smart eLife email</span>
                   <input
-                    className="w-full rounded-md border border-stone-300 px-3 py-2"
+                    className="w-full rounded-xl border border-stone-200 bg-white/80 px-3.5 py-2.5 shadow-inner outline-none focus:border-blue-400"
                     value={username}
                     onChange={(event) => setUsername(event.target.value)}
                     type="email"
@@ -508,21 +510,21 @@ export default function Page() {
                 <label className="mb-4 block text-sm">
                   <span className="mb-1 block text-stone-600">Password</span>
                   <input
-                    className="w-full rounded-md border border-stone-300 px-3 py-2"
+                    className="w-full rounded-xl border border-stone-200 bg-white/80 px-3.5 py-2.5 shadow-inner outline-none focus:border-blue-400"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     type="password"
                     autoComplete="current-password"
                   />
                 </label>
-                <button className="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-4 py-2 text-white disabled:opacity-60" disabled={busy}>
+                <button className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 font-medium text-white shadow-lg shadow-blue-500/20 hover:bg-blue-500 disabled:opacity-60" disabled={busy}>
                   <Lock size={16} />
                   Sign in
                 </button>
               </form>
 
               {requiresPasscode ? (
-                <form className="rounded-md border border-stone-200 bg-white p-4" onSubmit={handlePasscode}>
+                <form className="glass-panel rounded-3xl p-5 sm:p-6" onSubmit={handlePasscode}>
                   <div className="mb-4 flex items-center gap-2">
                     <PanelRight size={18} />
                     <h2 className="font-semibold">Wallpad</h2>
@@ -530,13 +532,13 @@ export default function Page() {
                   <label className="mb-4 block text-sm">
                     <span className="mb-1 block text-stone-600">Passcode</span>
                     <input
-                      className="w-full rounded-md border border-stone-300 px-3 py-2"
+                    className="w-full rounded-xl border border-stone-200 bg-white/80 px-3.5 py-2.5 shadow-inner outline-none focus:border-blue-400"
                       value={passcode}
                       onChange={(event) => setPasscode(event.target.value)}
                       inputMode="numeric"
                     />
                   </label>
-                  <button className="inline-flex items-center gap-2 rounded-md bg-stone-900 px-4 py-2 text-white disabled:opacity-60" disabled={busy}>
+                  <button className="inline-flex items-center gap-2 rounded-full bg-stone-900 px-5 py-2.5 font-medium text-white shadow-lg shadow-stone-900/10 hover:bg-stone-800 disabled:opacity-60" disabled={busy}>
                     <CheckCircle2 size={16} />
                     Authorize
                   </button>
@@ -553,13 +555,13 @@ export default function Page() {
                 <Metric icon={<Lightbulb size={18} />} label="Lights" value={String(health?.session.lights ?? lights.length)} />
               </div>
 
-              <div className="rounded-md border border-stone-200 bg-white p-4">
+              <div className="glass-panel rounded-3xl p-5 sm:p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="font-semibold">Elevator</h2>
                   <span className="text-sm text-stone-500">Exterior call</span>
                 </div>
                 <button
-                  className="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-4 py-2 text-white disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 font-medium text-white shadow-lg shadow-blue-500/20 hover:bg-blue-500 disabled:opacity-60"
                   onClick={handleElevator}
                   disabled={busy}
                 >
@@ -568,7 +570,7 @@ export default function Page() {
                 </button>
               </div>
 
-              <div className="rounded-md border border-stone-200 bg-white p-4">
+              <div className="glass-panel rounded-3xl p-5 sm:p-6">
                 <h2 className="mb-4 font-semibold">Lights</h2>
                 <div className="grid gap-2 md:grid-cols-2">
                   {lights.length ? (
@@ -592,7 +594,7 @@ export default function Page() {
           {signedIn && activeTab === "Devices" ? (
             <div className="space-y-3">
               {Object.entries(groups).map(([type, group]) => (
-                <div key={type} className="rounded-md border border-stone-200 bg-white p-4">
+                <div key={type} className="glass-panel rounded-3xl p-5 sm:p-6">
                   <h2 className="mb-3 font-semibold">{type}</h2>
                   <div className="grid gap-2">
                     {group.map((device) => (
@@ -600,7 +602,7 @@ export default function Page() {
                         <div className="min-w-0">
                           <input
                             aria-label={`Display name for ${device.name}`}
-                            className="w-full rounded-md border border-stone-300 px-3 py-2 font-medium"
+                            className="w-full rounded-xl border border-stone-200 bg-white/75 px-3.5 py-2.5 font-medium shadow-inner outline-none focus:border-blue-400"
                             value={deviceMappings[device.deviceId]?.name ?? ""}
                             placeholder={device.displayName}
                             onChange={(event) => updateDeviceMapping(device.deviceId, { name: event.target.value })}
@@ -608,8 +610,10 @@ export default function Page() {
                           <p className="text-xs text-stone-500">{device.deviceId}</p>
                         </div>
                         <button
-                          className={`rounded-md px-3 py-2 text-sm ${
-                            device.disabled ? "bg-stone-200 text-stone-700" : "bg-emerald-700 text-white"
+                          className={`rounded-full px-4 py-2 text-sm font-medium ${
+                            device.disabled
+                              ? "bg-stone-200/80 text-stone-600"
+                              : "bg-blue-600 text-white shadow-md shadow-blue-500/15"
                           }`}
                           onClick={() =>
                             updateDeviceMapping(device.deviceId, {
@@ -629,7 +633,7 @@ export default function Page() {
 
           {activeTab === "LG ThinQ" ? (
             <div className="space-y-4">
-              <div className="rounded-md border border-stone-200 bg-white p-4">
+              <div className="glass-panel rounded-3xl p-5 sm:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <AirVent size={20} />
@@ -642,7 +646,7 @@ export default function Page() {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      className="inline-flex items-center gap-2 rounded-md border border-stone-300 px-3 py-2 text-sm disabled:opacity-60"
+                      className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white/70 px-4 py-2 text-sm font-medium shadow-sm hover:bg-white disabled:opacity-60"
                       onClick={() => loadLgSubscriptions()}
                       disabled={!lgHealth?.configured || busy}
                     >
@@ -650,7 +654,7 @@ export default function Page() {
                       Subscriptions
                     </button>
                     <button
-                      className="inline-flex items-center gap-2 rounded-md bg-stone-900 px-3 py-2 text-sm text-white disabled:opacity-60"
+                      className="inline-flex items-center gap-2 rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-stone-900/10 hover:bg-stone-800 disabled:opacity-60"
                       onClick={() => refreshLgThinQ().catch((error) => setMessage(String(error)))}
                       disabled={busy}
                     >
@@ -662,7 +666,7 @@ export default function Page() {
               </div>
 
               {lgHealth && !lgHealth.configured ? (
-                <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+                <div className="rounded-3xl border border-amber-200/70 bg-amber-50/75 p-5 text-sm text-amber-950 shadow-sm backdrop-blur-xl">
                   <p className="font-semibold">LG ThinQ PAT configuration required</p>
                   <p className="mt-2">
                     Create an LG ThinQ Personal Access Token with device list, status, control,
@@ -687,7 +691,7 @@ export default function Page() {
                     lgDevices.map((device) => {
                       const isAirConditioner = device.deviceType === LG_AIR_CONDITIONER_TYPE;
                       return (
-                        <div key={device.deviceId} className="rounded-md border border-stone-200 bg-white p-4">
+                        <div key={device.deviceId} className="glass-panel rounded-3xl p-5 sm:p-6">
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
@@ -759,7 +763,7 @@ export default function Page() {
                           </div>
 
                           {lgDetails[device.deviceId] ? (
-                            <pre className="mt-4 max-h-72 overflow-auto rounded-md bg-stone-950 p-3 text-xs text-stone-100">
+                            <pre className="mt-4 max-h-72 overflow-auto rounded-2xl bg-stone-950/95 p-4 text-xs text-stone-100 shadow-inner">
                               {JSON.stringify(lgDetails[device.deviceId], null, 2)}
                             </pre>
                           ) : null}
@@ -767,15 +771,15 @@ export default function Page() {
                       );
                     })
                   ) : (
-                    <div className="rounded-md border border-stone-200 bg-white p-4 text-sm text-stone-500">
+                    <div className="glass-panel rounded-3xl p-5 text-sm text-stone-500">
                       No LG ThinQ devices were returned.
                     </div>
                   )}
 
                   {lgDetails.subscriptions ? (
-                    <div className="rounded-md border border-stone-200 bg-white p-4">
+                    <div className="glass-panel rounded-3xl p-5 sm:p-6">
                       <h3 className="mb-3 font-semibold">Subscription status</h3>
-                      <pre className="max-h-72 overflow-auto rounded-md bg-stone-950 p-3 text-xs text-stone-100">
+                      <pre className="max-h-72 overflow-auto rounded-2xl bg-stone-950/95 p-4 text-xs text-stone-100 shadow-inner">
                         {JSON.stringify(lgDetails.subscriptions, null, 2)}
                       </pre>
                     </div>
@@ -786,7 +790,7 @@ export default function Page() {
           ) : null}
 
           {signedIn && activeTab === "Settings" ? (
-            <div className="rounded-md border border-stone-200 bg-white p-4">
+            <div className="glass-panel rounded-3xl p-5 sm:p-6">
               <div className="mb-4 flex items-center gap-2">
                 <Settings size={18} />
                 <h2 className="font-semibold">Settings</h2>
@@ -805,14 +809,14 @@ export default function Page() {
           ) : null}
 
           {signedIn && activeTab === "Logs" ? (
-            <div className="rounded-md border border-stone-200 bg-white p-4">
+            <div className="glass-panel rounded-3xl p-5 sm:p-6">
               <div className="mb-4 flex items-center gap-2">
                 <TerminalSquare size={18} />
                 <h2 className="font-semibold">Logs</h2>
               </div>
               <div className="space-y-2">
                 {logs.map((entry) => (
-                  <div key={`${entry.timestamp}-${entry.message}`} className="rounded-md bg-stone-50 px-3 py-2 text-sm">
+                  <div key={`${entry.timestamp}-${entry.message}`} className="rounded-2xl border border-white/80 bg-white/55 px-4 py-3 text-sm shadow-sm">
                     <div className="flex items-center justify-between gap-3">
                       <span className="font-medium uppercase text-stone-700">{entry.level}</span>
                       <time className="text-xs text-stone-500">{new Date(entry.timestamp).toLocaleString()}</time>
@@ -831,12 +835,12 @@ export default function Page() {
 
 function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="rounded-md border border-stone-200 bg-white p-4">
+    <div className="glass-panel rounded-3xl p-5">
       <div className="mb-2 flex items-center gap-2 text-stone-500">
         {icon}
         <span className="text-sm">{label}</span>
       </div>
-      <p className="text-2xl font-semibold">{value}</p>
+      <p className="text-3xl font-semibold tracking-tight text-stone-950">{value}</p>
     </div>
   );
 }
@@ -853,7 +857,7 @@ function LightRow({
   onToggle: () => void;
 }) {
   return (
-    <div className="flex min-h-16 items-center justify-between gap-3 rounded-md border border-stone-200 px-3 py-2">
+    <div className="flex min-h-20 items-center justify-between gap-3 rounded-2xl border border-white/80 bg-white/55 px-4 py-3 shadow-sm">
       <div>
         <p className="font-medium">{device.displayName}</p>
         <p className="text-xs text-stone-500">{device.deviceId}</p>
@@ -861,7 +865,7 @@ function LightRow({
       <button
         aria-label={`Toggle ${device.displayName}`}
         className={`h-8 w-14 rounded-full p-1 transition disabled:cursor-wait disabled:opacity-60 ${
-          checked ? "bg-emerald-700" : "bg-stone-300"
+          checked ? "bg-amber-400 shadow-md shadow-amber-400/25" : "bg-stone-300/90"
         }`}
         disabled={disabled}
         onClick={onToggle}
@@ -885,7 +889,7 @@ function LgActionButton({
 }) {
   return (
     <button
-      className="inline-flex items-center gap-1.5 rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-50 disabled:cursor-wait disabled:opacity-50"
+      className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white/65 px-3.5 py-2 text-xs font-medium shadow-sm hover:bg-white disabled:cursor-wait disabled:opacity-50"
       disabled={pending}
       onClick={onClick}
     >
